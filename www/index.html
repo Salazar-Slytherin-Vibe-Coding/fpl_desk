@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f4a33">
+<title>FPL Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a matchday analyst in your pocket — one clear call, numbers on demand.
+   IDEA: the dressing-room tactics board: your XI chalked on a pitch, the move written above it.
+   PICTURE: striped pitch with shirts carrying projected points, under a big verdict.
+   COLOUR and TYPE: deep pitch green, chalk white, one referee-red accent; Barlow Condensed + Barlow.
+   LAYOUT: app shell — green header with the verdict, four tabs at the bottom, settings in a sheet. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0c1410);--ink:light-dark(#111a15,#e8efe9);--mut:light-dark(#5b6b61,#93a399);--line:light-dark(#dfe6e0,#24312a);--soft:light-dark(#f1f5f1,#131e18);--card:light-dark(#ffffff,#16221b);
+--field:#0f4a33;--field2:#125a3e;--chalk:#f3f7f2;--acc:#e8402f;--good:light-dark(#1d7f49,#4cc47f);--bad:light-dark(#c43b2c,#ff7a6a);
+--s0:light-dark(#8a958e,#7d8a82);--s1:light-dark(#257de0,#338ced);--s2:light-dark(#f47230,#e76624);--s3:light-dark(#00b894,#00a888);--s4:light-dark(#f2a600,#d28e05);--s5:light-dark(#ee7fac,#e24d8b);
+--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--soft);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow-x:clip;padding-bottom:calc(72px + var(--safe-b))}
+h1,h2,h3,.big{font-family:"Barlow Condensed",Barlow,system-ui,sans-serif;line-height:1.05;margin:0;text-wrap:balance}
+h2{font-size:28px;font-weight:700}h3{font-size:20px;font-weight:700}
+button{font:inherit;color:inherit}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+header{background:var(--field);color:var(--chalk);padding:calc(10px + var(--safe-t)) 0 0;position:sticky;top:0;z-index:5}
+.hbar{display:flex;align-items:center;gap:10px;min-height:52px}
+.logo{font:700 24px/1 "Barlow Condensed",Barlow,sans-serif;letter-spacing:.2px}
+.team{font-size:14px;color:#b9d3c2;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon{width:44px;height:44px;border-radius:12px;border:0;background:rgba(255,255,255,.08);color:var(--chalk);display:grid;place-items:center;cursor:pointer}
+.icon svg{width:22px;height:22px}
+.hero{background:var(--field);color:var(--chalk);padding:6px 0 22px}
+.kick{font-size:13px;color:#b9d3c2}
+.verdict{font-size:clamp(34px,9vw,48px);font-weight:700;margin:4px 0 6px}
+.sub{font-size:16px;color:#d8e7dd}.sub b{color:#fff}
+.btn{min-height:48px;padding:10px 18px;border-radius:12px;border:2px solid currentColor;background:transparent;font-weight:600;font-size:16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.full{width:100%}.btn.sm{min-height:40px;padding:6px 12px;font-size:15px}
+.btn.ghost{border-color:var(--line)}
+.btn:disabled{opacity:.5}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+section.view{display:none;padding:16px 0 24px}section.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.mut{color:var(--mut)}.small{font-size:14px}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:4px 12px;align-items:center;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px 12px 12px 10px;cursor:pointer;min-height:64px}
+.opt.on{border-color:var(--acc)}
+.opt .bar{width:8px;align-self:stretch;border-radius:4px}
+.opt .nm{font-weight:600;font-size:17px}.opt .mv{font-size:14px;color:var(--mut)}
+.opt .nums{text-align:right;white-space:nowrap}.opt .nums b{display:block;font:700 24px/1 "Barlow Condensed",Barlow,sans-serif}.opt .nums span{font-size:12px;color:var(--mut)}
+.tag{display:inline-block;background:var(--ink);color:var(--bg);font-size:12px;font-weight:600;padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:2px}
+.out{color:var(--bad);font-weight:600}.in{color:var(--good);font-weight:600}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chipb{flex:none;min-height:40px;padding:6px 14px;border-radius:20px;border:2px solid var(--line);background:var(--card);font-weight:600;cursor:pointer}
+.chipb.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pitch{position:relative;border-radius:16px;padding:14px 4px 10px;background:repeating-linear-gradient(180deg,var(--field2) 0 40px,var(--field) 40px 80px);box-shadow:inset 0 0 0 4px var(--field),inset 0 0 0 6px rgba(243,247,242,.35)}
+.pitch:before{content:"";position:absolute;left:50%;top:6px;width:40%;height:13%;transform:translateX(-50%);border:2px solid rgba(243,247,242,.3);border-top:0}
+.prow{display:flex;justify-content:space-evenly;gap:2px;margin:8px 0;position:relative}
+.pl{position:relative;width:clamp(58px,17vw,92px);text-align:center;cursor:pointer;background:none;border:0;color:var(--chalk);padding:2px 0;border-radius:10px}
+.pl svg{width:40px;height:36px;display:block;margin:0 auto;filter:drop-shadow(0 3px 2px rgba(0,0,0,.35))}
+.pl .n{display:block;background:var(--chalk);color:#10261b;font-weight:600;font-size:12px;line-height:1.3;padding:1px 2px;border-radius:4px 4px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .f{display:block;background:#0a2e20;font-size:11px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .x{display:block;font:700 17px/1.15 "Barlow Condensed",Barlow,sans-serif;background:rgba(0,0,0,.3);border-radius:0 0 4px 4px}
+.pl.new .n{background:var(--acc);color:#fff}.pl.doubt .x{color:#ffc2b8}
+.badge{position:absolute;top:0;right:calc(50% - 28px);background:#111;color:#fff;font:700 11px/18px Barlow,sans-serif;width:18px;height:18px;border-radius:50%}.badge.v{background:#5b6b61}
+.bench{display:flex;justify-content:space-evenly;margin-top:10px;padding-top:8px;border-top:2px dashed rgba(243,247,242,.35)}
+.cap{font-size:14px;color:var(--mut);margin:8px 2px 0}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:var(--safe-b);z-index:6}
+nav.tabs button{flex:1;max-width:200px;border:0;background:none;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:600;color:var(--mut);cursor:pointer}
+nav.tabs button svg{width:24px;height:24px}nav.tabs button.on{color:var(--ink)}nav.tabs button.on svg{color:var(--acc)}
+input,select,textarea{font:16px Barlow,system-ui,sans-serif;min-height:48px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{min-height:110px}
+label.f{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;border-bottom:1px solid var(--line)}
+.tog input{width:24px;height:24px;min-height:0;accent-color:var(--acc)}
+.list{display:grid;gap:8px}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.pc .top{display:flex;align-items:center;gap:10px}.pc .who{flex:1;min-width:0}.pc .who b{font-size:17px}.pc .who span{font-size:13px;color:var(--mut)}
+.pc .tot{text-align:right;white-space:nowrap}.pc .tot b{font:700 24px/1 "Barlow Condensed",Barlow,sans-serif;display:block}.pc .tot span{font-size:12px}
+.gwrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-top:8px}
+.gwc{border-radius:8px;text-align:center;padding:4px 2px;font-size:12px;line-height:1.25}.gwc b{display:block;font-size:15px}
+.pc.mine{background:var(--soft)}
+.namebtn{border:0;background:none;padding:0;text-align:left;cursor:pointer;font-weight:700;font-size:17px}
+dialog{border:0;border-radius:20px 20px 0 0;margin:auto auto 0;width:100%;max-width:640px;max-height:92vh;padding:0;background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.sheet{padding:18px 18px calc(24px + var(--safe-b));overflow:auto;max-height:92vh}
+.sheethead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.xbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:none;color:var(--ink);font-size:22px;cursor:pointer}
+.note{border-left:4px solid var(--acc);padding:8px 12px;background:var(--soft);border-radius:0 10px 10px 0;font-size:15px}
+.msg{font-size:14px;margin-top:8px}.err{color:var(--bad)}.okc{color:var(--good)}
+.sq{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sqc{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 10px;border:1px solid var(--line);border-radius:20px;font-size:14px;background:var(--card)}
+.sqc button{border:0;background:none;color:var(--mut);font-size:18px;min-width:32px;min-height:32px;cursor:pointer}
+.sugg{border:1px solid var(--line);border-radius:12px;margin-top:6px;max-height:260px;overflow:auto;background:var(--card)}
+.sugg button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;cursor:pointer;min-height:48px}
+.fig{position:relative;height:280px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:8px 0}.legend>span{display:inline-flex;align-items:center}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;flex:none}
+.otip{position:absolute;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.18);pointer-events:none;min-width:210px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:12px;color:var(--mut);font-weight:600}td.r,th.r{text-align:right}
+.scroll{overflow-x:auto}
+.tick td{padding:3px;font-size:12px;text-align:center;line-height:1.25}.tick td:first-child{text-align:left;font-weight:600;position:sticky;left:0;background:var(--card)}
+.heat{border-radius:6px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}.seg button{border:0;background:none;font-weight:600;font-size:14px;padding:8px 12px;min-height:44px;cursor:pointer}.seg button.on{background:var(--ink);color:var(--bg)}
+.overlay{position:fixed;inset:0;background:rgba(10,30,20,.86);color:#fff;display:grid;place-items:center;z-index:20;text-align:center;padding:24px}
+.spin{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;margin:0 auto 14px}
+.banner{background:#fff4e5;color:#5a3b00;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+.empty{text-align:center;padding:24px 8px}
+details summary{cursor:pointer;font-weight:600;min-height:48px;display:flex;align-items:center}
+@media(prefers-reduced-motion:no-preference){.spin{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}.opt,.chipb{transition:border-color .15s,background .15s}}
+@media(min-width:700px){.pl .n{font-size:13px}.pl .f{font-size:12px}}
+</style></head><body>
+
+<header><div class="wrap hbar">
+  <div class="logo">FPL Desk</div><div class="team" id="teamline"></div>
+  <button class="icon" id="opensettings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</div></header>
+
+<div class="hero" id="hero"><div class="wrap">
+  <div class="kick" id="kick">Loading…</div>
+  <div class="verdict big" id="verdict">&nbsp;</div>
+  <div class="sub" id="vsub"></div>
+</div></div>
+
+<main class="wrap">
+  <section class="view" id="v-setup">
+    <div class="card">
+      <h2>Set up your team</h2>
+      <div id="setup-native">
+        <p>Enter your FPL team ID to load your squad, bank, free transfers and chips.</p>
+        <label class="f" for="tid">FPL team ID</label>
+        <input id="tid" inputmode="numeric" placeholder="e.g. 1234567" autocomplete="off">
+        <button class="btn pri full" id="loadteam" style="margin-top:12px">Load my team</button>
+        <div class="msg" id="tidmsg"></div>
+        <details style="margin-top:8px"><summary>Where do I find my team ID?</summary>
+          <p class="small">On the FPL website, open <b>Points</b>. The number after <b>/entry/</b> in the address is your ID, e.g. fantasy.premierleague.com/entry/<b>1234567</b>/event/12. In the FPL app it’s under Profile.</p></details>
+      </div>
+      <div id="setup-web">
+        <p>Paste your 15 players, separated by commas or new lines. Add the club code if two players share a name, e.g. “Gabriel ARS”.</p>
+        <textarea id="bulk" placeholder="Raya, Sánchez, Gabriel ARS, Van Hecke, …"></textarea>
+        <button class="btn pri full" id="bulkgo" style="margin-top:10px">Use these players</button>
+        <div class="msg" id="bulkmsg"></div>
+        <p class="small mut" id="apkhint"></p>
+      </div>
+      <button class="btn ghost full" id="trysample" style="margin-top:14px">Just try it with a sample squad</button>
+    </div>
+  </section>
+
+  <section class="view" id="v-week">
+    <div id="banner"></div>
+    <h3>Your options</h3>
+    <p class="small mut" style="margin:4px 0 0" id="optsub"></p>
+    <div class="opts" id="opts"></div>
+    <div id="act" style="margin:12px 0 18px"></div>
+    <h3 style="margin-bottom:8px">Your team by gameweek</h3>
+    <div class="chips" id="gwtabs"></div>
+    <div class="pitch" id="pitch"></div>
+    <p class="cap" id="pitchcap"></p>
+    <p class="small mut" style="margin-top:14px">Every option assumes no more transfers after this week, which flatters the chips a little. Saving a chip for a blank or double gameweek isn’t valued here. Tap any player for his points breakdown.</p>
+  </section>
+
+  <section class="view" id="v-outlook">
+    <h2>5-week outlook</h2>
+    <p class="mut" style="margin:6px 0 0">Points gained or lost against keeping your team, added up week by week. Tap the chart for numbers.</p>
+    <div class="card" style="margin-top:12px;padding:12px">
+      <div class="legend" id="olegend"></div>
+      <div class="fig"><svg id="outlook" role="img" aria-label="Cumulative points versus keeping the team"></svg><div class="otip" id="otip" hidden></div></div>
+    </div>
+    <div class="card scroll" style="padding:4px 8px"><table id="outt"></table></div>
+  </section>
+
+  <section class="view" id="v-players">
+    <h2>Who can I bring in?</h2>
+    <p class="mut" style="margin:6px 0 10px">Pick who you’d sell. You’ll see everyone you can afford in his position, with points for the next five gameweeks.</p>
+    <label class="f" for="repout">Selling</label>
+    <select id="repout"></select>
+    <div class="row2" style="margin-top:10px">
+      <div><label class="f" for="repsort" style="margin-top:0">Sort by</label><select id="repsort"><option value="t">5-GW points</option><option value="n">Next GW points</option><option value="v">Points per £m</option></select></div>
+      <div><label class="f" for="repq" style="margin-top:0">Search</label><input id="repq" placeholder="Name" autocomplete="off"></div>
+    </div>
+    <p class="small" id="repinfo" style="margin:12px 0"></p>
+    <div class="list" id="replist"></div>
+  </section>
+
+  <section class="view" id="v-fixtures">
+    <h2>Fixtures</h2>
+    <div class="seg" id="tmode" style="margin:10px 0"><button data-m="la" class="on">For defenders</button><button data-m="lf">For attackers</button></div>
+    <p class="small mut" style="margin:0 0 10px">Expected goals for the club in each match: conceded for defenders, scored for attackers. Green is better. * means away. Easiest run first.</p>
+    <div class="card scroll" style="padding:6px"><table class="tick" id="tt"></table></div>
+  </section>
+</main>
+
+<nav class="tabs" id="tabs">
+  <button data-v="week" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v18" opacity=".6"/><circle cx="12" cy="12" r="3"/></svg>This week</button>
+  <button data-v="outlook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/></svg>Outlook</button>
+  <button data-v="players"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>Transfers</button>
+  <button data-v="fixtures"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Fixtures</button>
+</nav>
+
+<dialog id="settings"><div class="sheet">
+  <div class="sheethead"><h2>Settings</h2><button class="xbtn" data-close aria-label="Close">×</button></div>
+  <div id="set-team"></div>
+  <div class="row2">
+    <div><label class="f" for="bank">Bank (£m)</label><input id="bank" type="number" step="0.1" min="0" inputmode="decimal"></div>
+    <div><label class="f" for="ft">Free transfers</label><select id="ft"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+  </div>
+  <p class="small mut" id="ftnote" style="margin:6px 0 0"></p>
+  <div class="tog" style="margin-top:8px"><span>Wildcard available</span><input type="checkbox" id="cwc"></div>
+  <div class="tog"><span>Free Hit available</span><input type="checkbox" id="cfh"></div>
+  <label class="f" for="hz">Plan over</label>
+  <select id="hz"><option value="3">3 gameweeks</option><option value="4">4 gameweeks</option><option value="5">5 gameweeks</option><option value="6">6 gameweeks</option><option value="8">8 gameweeks</option></select>
+  <h3 style="margin-top:20px">Squad</h3>
+  <div class="sq" id="sqchips"></div>
+  <label class="f" for="search">Add a player</label>
+  <input id="search" placeholder="Type a name" autocomplete="off"><div class="sugg" id="sugg" hidden></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn sm ghost" id="pastesquad">Paste a new squad</button><button class="btn sm ghost" id="clearsquad">Clear squad</button></div>
+  <h3 style="margin-top:20px">Data</h3>
+  <p class="small" id="datastatus"></p>
+  <div id="datactl"></div>
+  <details><summary>How the predictions work</summary>
+    <div class="small">
+      <p>Each player gets expected points per fixture under official FPL scoring. Inputs: his share of his team’s xG and xA, the opponent’s attack and defence strength (from xG), home advantage, clean-sheet and goals-conceded odds, saves, defensive contributions, bonus and cards. Minutes weight recent games more heavily and use FPL’s chance of playing.</p>
+      <p>Calibrated on this season: FPL gives about 35% more assists than xA, and xG-based odds overstate goals conceded. Over GW1–10 the predictions correlated about 0.75 with actual points per 90.</p>
+      <p>Strategies compare your best XI plus captain each week. Hits cost 4. Wildcard and Free Hit squads are searched for the most points within your budget and the 3-per-club rule. Selling prices aren’t public, so current prices are used.</p>
+    </div></details>
+</div></dialog>
+
+<dialog id="pdlg"><div class="sheet" id="pdlgc"></div></dialog>
+<div class="overlay" id="overlay" hidden><div><div class="spin"></div><div id="ovtext">Loading…</div></div></div>
+
+<script src="model.js"></script>
+<script src="live.js"></script>
+<script>
+{
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
+const sgn = x => (x >= 0 ? '+' : '−') + f1(Math.abs(x));
+const APK_URL = 'https://github.com/Salazar-Slytherin-Vibe-Coding/fpl_desk/releases/latest/download/FPL-Desk.apk';
+const KIT = { ARS: '#db0007', AVL: '#7a003c', BOU: '#b50e12', BRE: '#e30613', BHA: '#0057b8', CHE: '#034694', COV: '#6cabdd', CRY: '#1b458f', EVE: '#003399', FUL: '#f5f5f5', HUL: '#f5a12d', IPS: '#3a64a3', LEE: '#f5f5f5', LIV: '#c8102e', MCI: '#6cabdd', MUN: '#da291c', NEW: '#241f20', NFO: '#dd0000', TOT: '#f5f5f5', SUN: '#eb172b', WOL: '#fdb913', WHU: '#7a263a', BUR: '#6c1d45', LUT: '#f78f1e', SOU: '#d71920', LEI: '#003090', SHU: '#ee2737' };
+const store = { get(k, d) { try { const v = localStorage.getItem('fpldesk2:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('fpldesk2:' + k, JSON.stringify(v)); return true; } catch { return false; } } };
+const KEYS = ['squad', 'bank', 'ft', 'hz', 'over', 'wc', 'fh', 'teamId', 'team', 'sample', 'ftEst'];
+const S = { squad: [], bank: 0, ft: 1, hz: 5, over: {}, wc: true, fh: true, teamId: '', team: null, sample: false, ftEst: null };
+KEYS.forEach(k => { const v = store.get(k); if (v !== undefined && v !== null) S[k] = v; });
+const save = () => KEYS.forEach(k => store.set(k, S[k]));
+const NATIVE = FPLLive.isNative();
+let snap = null, live = store.get('live', null), M = null, R = null, selKey = 'roll', selGW = null, view = 'week', outRO = null, repOut = null, tMode = 'la', dataNote = '';
+const T = id => M.teamById[id]?.short || '?';
+const SERIES = { roll: 'var(--s0)', t0: 'var(--s1)', t1: 'var(--s2)', d: 'var(--s3)', fh: 'var(--s4)', wc: 'var(--s5)' };
+const busy = t => { $('overlay').hidden = !t; if (t) $('ovtext').textContent = t; };
+
+// ---------- data ----------
+async function boot() {
+  busy('Loading…');
+  try { snap = await (await fetch('data.json')).json(); } catch (e) { busy(''); $('kick').textContent = 'Could not load data'; return; }
+  if (NATIVE) await refreshLive(false);
+  build();
+  if (NATIVE && S.teamId && live && (!S.team || S.team.event < currentEvent())) await importTeam(S.teamId, true);
+  busy('');
+  route();
+}
+function currentEvent() { const ev = live?.bootstrap?.events; if (!ev) return 0; const c = ev.find(e => e.is_current); return c ? c.id : 0; }
+async function refreshLive(force) {
+  const fresh = live && Date.now() - Date.parse(live.meta.snapshot) < 3 * 3600e3;
+  if (fresh && !force) return;
+  try { live = await FPLLive.loadData(busy); store.set('live', live) || null; dataNote = ''; }
+  catch (e) { dataNote = live ? `Couldn’t refresh from FPL (${e.message}). Showing data from ${new Date(live.meta.snapshot).toLocaleString()}.` : `Couldn’t reach FPL (${e.message}). Showing the built-in snapshot, which may be out of date.`; }
+}
+function build() {
+  M = FPLModel.build(snap, { fresh: live || undefined, minutes: S.over });
+  S.squad = S.squad.filter(id => M.byId[id]);
+}
+async function importTeam(id, quiet) {
+  const msg = $('tidmsg');
+  try {
+    busy('Finding your team');
+    if (!live) await refreshLive(true);
+    const t = await FPLLive.loadTeam(id, busy);
+    Object.assign(S, { teamId: String(id), team: { name: t.name, manager: t.manager, event: t.event, rank: t.rank }, squad: t.squad, bank: t.bank, ft: t.ft, ftEst: t.ft, wc: t.chips.wc, fh: t.chips.fh, sample: false });
+    save(); build(); if (msg) msg.textContent = '';
+    return true;
+  } catch (e) {
+    if (msg) { msg.className = 'msg err'; msg.textContent = 'Couldn’t load that team: ' + e.message + '. Check the ID and your connection.'; }
+    if (quiet) dataNote = 'Couldn’t refresh your team from FPL. Showing your last saved squad.';
+    return false;
+  } finally { busy(''); }
+}
+
+// ---------- routing & planning ----------
+function route() {
+  const ready = S.squad.length === 15;
+  document.querySelectorAll('section.view').forEach(s => s.classList.remove('on'));
+  $('tabs').hidden = !ready;
+  renderHeader();
+  $('hero').hidden = false;
+  if (!ready) { $('v-setup').classList.add('on'); renderSetup(); return; }
+  $('v-' + view).classList.add('on');
+  $('hero').hidden = view !== 'week';
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
+  if (!R) plan(); else renderView();
+}
+function renderHeader() {
+  $('teamline').textContent = S.team ? S.team.name : S.sample ? 'Sample squad' : S.squad.length ? 'My squad' : '';
+  const ko = M.firstKo[M.nextGW];
+  $('kick').textContent = `GW${M.nextGW}${ko ? ' · first kickoff ' + new Date(ko).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}`;
+  if (S.squad.length !== 15) { $('verdict').textContent = 'Let’s get your team in'; $('vsub').textContent = NATIVE ? 'It takes one number.' : 'Paste your 15 players to get this week’s best move.'; }
+}
+function plan() {
+  $('verdict').textContent = 'Working it out…'; $('vsub').textContent = 'Comparing transfers, Wildcard and Free Hit.';
+  setTimeout(() => {
+    R = FPLModel.strategies(M, S.squad, +S.bank, +S.ft, { horizon: +S.hz, discount: 0.85, chips: { wc: S.wc, fh: S.fh } });
+    selGW = R.gwList[0];
+    selKey = R.list.reduce((b, s) => s.total > b.total ? s : b, R.list[0]).key;
+    renderHero(); renderView();
+  }, 30);
+}
+function replan() { R = null; route(); }
+function renderView() {
+  if (!R) return;
+  if (view === 'week') renderWeek(); else if (view === 'outlook') renderOutlook(); else if (view === 'players') renderRep(); else renderTicker();
+}
+function renderHero() {
+  const best = R.list.reduce((b, s) => s.total > b.total ? s : b, R.list[0]), gl = R.gwList, rng = `GW${gl[0]}–${gl[gl.length - 1]}`;
+  const head = { roll: 'Keep your team', wc: 'Play your Wildcard', fh: 'Play your Free Hit' }[best.key] || (best.moves.length === 1 ? 'Make one transfer' : 'Make two transfers');
+  $('verdict').textContent = head;
+  $('vsub').innerHTML = best.key === 'roll' ? `No move beats saving the transfer over ${rng}. You’ll have ${Math.min(5, +S.ft + 1)} free next week.`
+    : best.moves.length ? `${best.moves.map(m => `${esc(m.out.name)} → <b>${esc(m.in.name)}</b>`).join(', ')}: <b>${sgn(best.delta)}</b> pts over ${rng}${best.hit ? ` after the −${best.hit}` : ''}.`
+    : `<b>${sgn(best.delta)}</b> pts over ${rng} compared with keeping your team.`;
+}
+
+// ---------- This week ----------
+const movesTxt = s => s.moves.length ? s.moves.map(m => `<span class="out">${esc(m.out.name)}</span> → <span class="in">${esc(m.in.name)}</span>`).join(', ') + (s.hit ? ` · −${s.hit} hit` : '') : esc(s.key === 'roll' ? `Save the transfer (${Math.min(5, +S.ft + 1)} free next week)` : s.key === 'fh' ? 'New team for one week, then yours returns' : 'Rebuild your whole squad');
+function renderWeek() {
+  $('banner').innerHTML = dataNote ? `<div class="banner">${esc(dataNote)}</div>` : '';
+  const best = R.list.reduce((b, s) => s.total > b.total ? s : b, R.list[0]), gl = R.gwList;
+  $('optsub').textContent = `Predicted points: GW${gl[0]} and the total for the next ${gl.length} gameweeks.`;
+  $('opts').innerHTML = R.list.map(s => `<button class="opt${s.key === selKey ? ' on' : ''}" data-key="${s.key}"><span class="bar" style="background:${SERIES[s.key]}"></span><span><span class="nm">${esc(s.name)}</span>${s.key === best.key ? '<span class="tag">Best</span>' : ''}<br><span class="mv">${movesTxt(s)}</span></span><span class="nums"><b>${f1(s.total)}</b><span>${s.key === 'roll' ? `${f1(s.pts[0])} in GW${gl[0]}` : `<span class="${s.delta >= 0 ? 'pos' : 'neg'}">${sgn(s.delta)}</span> · ${f1(s.pts[0])} in GW${gl[0]}`}</span></span></button>`).join('');
+  $('opts').querySelectorAll('.opt').forEach(b => b.onclick = () => { selKey = b.dataset.key; renderWeek(); });
+  const s = R.list.find(x => x.key === selKey), act = $('act');
+  if (s.plan) act.innerHTML = `<button class="btn pri full" id="apply">I’ve made this transfer</button>`;
+  else if (s.key === 'wc') act.innerHTML = `<button class="btn pri full" id="apply">I’ve played my Wildcard</button>`;
+  else act.innerHTML = s.key === 'fh' ? '<p class="small mut" style="margin:0">Free Hit lasts one week. Pick this team in FPL; your squad here stays the same.</p>' : '';
+  if ($('apply')) $('apply').onclick = () => {
+    if (s.plan) { S.squad = s.plan.squadIds.slice(); S.bank = Math.round(s.plan.money * 10) / 10; S.ft = Math.max(0, S.ft - s.plan.outs.length); }
+    else { S.squad = s.chipSquad.slice(); S.bank = Math.round(s.money * 10) / 10; S.wc = false; }
+    S.sample = false; save(); replan();
+  };
+  $('gwtabs').innerHTML = gl.map(g => `<button class="chipb${g === selGW ? ' on' : ''}" data-g="${g}">GW${g} · ${f1(s.pts[gl.indexOf(g)])}</button>`).join('');
+  $('gwtabs').querySelectorAll('button').forEach(b => b.onclick = () => { selGW = +b.dataset.g; renderWeek(); });
+  const ids = s.squadsIds[gl.indexOf(selGW)], own = new Set(S.squad);
+  renderPitch(ids, ids.filter(id => !own.has(id)), selGW, s.name);
+}
+function shirt(team) { const c = KIT[T(team)] || '#ccc'; return `<svg viewBox="0 0 44 40" aria-hidden="true"><path d="M14 2 L6 6 L1 14 L7 18 L10 15 L10 38 L34 38 L34 15 L37 18 L43 14 L38 6 L30 2 Q22 8 14 2 Z" fill="${c}" stroke="rgba(0,0,0,.45)" stroke-width="1.4"/><path d="M14 2 Q22 8 30 2" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.6"/></svg>`; }
+function fxShort(p, g) { const d = M.ticker[p.team][g] || []; return d.length ? d.map(x => T(x.opp) + (x.home ? '' : '*')).join('+') : 'Blank'; }
+function fxLong(p, g) { const d = M.ticker[p.team][g] || []; return d.length ? d.map(x => T(x.opp) + (x.home ? ' (H)' : ' (A)')).join(', ') : 'No match'; }
+function chip(p, g, r, ins) {
+  const cap = r.cap === p ? '<span class="badge">C</span>' : r.vice === p ? '<span class="badge v">V</span>' : '';
+  return `<button class="pl${ins.includes(p.id) ? ' new' : ''}${FPLModel.avail(p, M.horizonGWs.indexOf(g)) < 0.75 ? ' doubt' : ''}" data-id="${p.id}" aria-label="${esc(p.name)}">${cap}${shirt(p.team)}<span class="n">${esc(p.name)}</span><span class="f">${esc(fxShort(p, g))}</span><span class="x">${f1((p.ep[g] || 0) * (r.cap === p ? 2 : 1))}</span></button>`;
+}
+function renderPitch(ids, ins, g, label) {
+  const sq = ids.map(id => M.byId[id]).filter(Boolean), r = FPLModel.bestXI(sq, g);
+  $('pitch').innerHTML = [1, 2, 3, 4].map(ps => `<div class="prow">${r.xi.filter(p => p.pos === ps).map(p => chip(p, g, r, ins)).join('')}</div>`).join('') + `<div class="bench">${r.bench.map(p => chip(p, g, r, ins)).join('')}</div>`;
+  $('pitch').querySelectorAll('[data-id]').forEach(b => b.onclick = () => openPlayer(+b.dataset.id));
+  const form = [2, 3, 4].map(ps => r.xi.filter(p => p.pos === ps).length).join('-');
+  $('pitchcap').textContent = `${label}, GW${g}: ${form}, ${f1(r.pts)} pts predicted with ${r.cap.name} as captain (shown doubled).${ins.length ? ' Red names are players you don’t own yet.' : ''} Bench below the line, in order.`;
+}
+
+// ---------- Outlook ----------
+function renderOutlook() {
+  const gl = R.gwList, roll = R.list[0];
+  const cum = s => { let a = 0; return s.pts.map((p, i) => a += p - roll.pts[i]); };
+  $('outt').innerHTML = `<thead><tr><th>Option</th>${gl.map(g => `<th class="r">GW${g}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>${R.list.map(s => `<tr><td><span class="sw" style="background:${SERIES[s.key]}"></span>${esc(s.name)}</td>${s.pts.map((p, i) => `<td class="r">${f1(p)}${s.key !== 'roll' ? `<br><span class="${p - roll.pts[i] >= 0 ? 'pos' : 'neg'}" style="font-size:12px">${sgn(p - roll.pts[i])}</span>` : ''}</td>`).join('')}<td class="r"><b>${f1(s.total)}</b>${s.key !== 'roll' ? `<br><span class="${s.delta >= 0 ? 'pos' : 'neg'}" style="font-size:12px">${sgn(s.delta)}</span>` : ''}</td></tr>`).join('')}</tbody>`;
+  $('olegend').innerHTML = R.list.map(s => `<span><span class="sw" style="background:${SERIES[s.key]}"></span>${esc(s.name)}</span>`).join('');
+  const svg = $('outlook'), tip = $('otip'), series = R.list.map(s => ({ s, c: cum(s) }));
+  const draw = () => {
+    const W = svg.clientWidth, H = svg.clientHeight; if (!W) return; const wide = W >= 560;
+    const pl = 36, pr = wide ? 160 : 12, pt = 14, pb = 26;
+    const vals = series.flatMap(x => x.c).concat(0); let lo = Math.min(...vals), hi = Math.max(...vals); const pad = Math.max(1, (hi - lo) * .1); lo -= pad; hi += pad;
+    const X = i => pl + i * (W - pl - pr) / Math.max(1, gl.length - 1), Y = v => pt + (hi - v) / (hi - lo) * (H - pt - pb);
+    const step = Math.max(1, Math.ceil((hi - lo) / 5 / 2) * 2), ticks = []; for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) ticks.push(v);
+    let h = ticks.map(v => `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="${v === 0 ? 1.5 : 1}"/><text x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--mut)">${v > 0 ? '+' : ''}${v}</text>`).join('');
+    h += gl.map((g, i) => `<text x="${X(i)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--mut)">GW${g}</text>`).join('');
+    h += series.map(({ s, c }) => `<polyline fill="none" stroke="${SERIES[s.key]}" stroke-width="2.5" stroke-linejoin="round" points="${c.map((v, i) => X(i) + ',' + Y(v)).join(' ')}"/>` + c.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="${SERIES[s.key]}" stroke="var(--card)" stroke-width="2"/>`).join('')).join('');
+    if (wide) { const labs = series.map(({ s, c }) => ({ t: s.name, y: Y(c[c.length - 1]), v: c[c.length - 1], k: s.key })).sort((a, b) => a.y - b.y); for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 15) labs[i].y = labs[i - 1].y + 15; h += labs.map(l => `<text x="${W - pr + 10}" y="${l.y + 4}" font-size="12" fill="var(--ink)">${esc(l.t)}${l.k === 'roll' ? '' : ' ' + sgn(l.v)}</text>`).join(''); }
+    h += `<line id="ocross" y1="${pt}" y2="${H - pb}" stroke="var(--mut)" stroke-dasharray="3 3" visibility="hidden"/><rect x="0" y="0" width="${W}" height="${H}" fill="transparent" id="ohit"/>`;
+    svg.innerHTML = h;
+    const hit = svg.querySelector('#ohit'), cr = svg.querySelector('#ocross');
+    const show = e => {
+      const x = e.clientX - svg.getBoundingClientRect().left; let i = 0, bd = 1e9; gl.forEach((g, j) => { const d = Math.abs(X(j) - x); if (d < bd) { bd = d; i = j; } });
+      cr.setAttribute('x1', X(i)); cr.setAttribute('x2', X(i)); cr.setAttribute('visibility', 'visible');
+      tip.hidden = false; tip.innerHTML = `<b>After GW${gl[i]}</b>` + [...series].sort((a, b) => b.c[i] - a.c[i]).map(({ s, c }) => `<div><span class="sw" style="background:${SERIES[s.key]}"></span>${esc(s.name)} <b>${s.key === 'roll' ? '0' : sgn(c[i])}</b></div>`).join('');
+      const left = X(i) + 12 + tip.offsetWidth > W ? X(i) - tip.offsetWidth - 12 : X(i) + 12; tip.style.left = Math.max(0, left) + 'px'; tip.style.top = '4px';
+    };
+    hit.addEventListener('pointermove', show); hit.addEventListener('pointerdown', show);
+    hit.addEventListener('pointerleave', () => { cr.setAttribute('visibility', 'hidden'); tip.hidden = true; });
+  };
+  outRO?.disconnect(); outRO = new ResizeObserver(draw); outRO.observe(svg);
+}
+
+// ---------- Transfers ----------
+const heat = v => { const t = Math.max(0, Math.min(1, (v - 1) / 6)); return `background:rgba(29,138,79,${(t * .75).toFixed(2)});${t > .6 ? 'color:#fff' : ''}`; };
+function renderRep() {
+  const sq = S.squad.map(id => M.byId[id]), gl = M.horizonGWs.slice(0, 5), sum = p => gl.reduce((s, g) => s + (p.ep[g] || 0), 0);
+  let out = sq.find(p => p.id === repOut); if (!out) { out = sq.reduce((a, b) => sum(b) < sum(a) ? b : a); repOut = out.id; }
+  $('repout').innerHTML = [1, 2, 3, 4].map(ps => `<optgroup label="${FPLModel.POS[ps]}">${sq.filter(p => p.pos === ps).sort((a, b) => sum(a) - sum(b)).map(p => `<option value="${p.id}" ${p.id === out.id ? 'selected' : ''}>${esc(p.name)} (${esc(T(p.team))}, £${p.cost.toFixed(1)}) · ${f1(sum(p))} pts</option>`).join('')}</optgroup>`).join('');
+  const budget = +S.bank + out.cost, cc = {}; sq.forEach(p => { if (p !== out) cc[p.team] = (cc[p.team] || 0) + 1; });
+  const own = new Set(S.squad), sk = $('repsort').value, q = $('repq').value.trim().toLowerCase(), base = sum(out);
+  const rows = M.players.filter(p => p.pos === out.pos && !own.has(p.id) && p.status !== 'u' && p.status !== 'n' && p.cost <= budget + 1e-9 && (cc[p.team] || 0) < 3 && (!q || p.name.toLowerCase().includes(q)))
+    .map(p => { const t = sum(p); return { p, t, k: sk === 'v' ? t / p.cost : sk === 'n' ? p.ep[gl[0]] || 0 : t }; }).filter(r => r.t >= 1 || q).sort((a, b) => b.k - a.k).slice(0, 40);
+  $('repinfo').innerHTML = `Selling <b>${esc(out.name)}</b> gives you <b>£${budget.toFixed(1)}m</b> to spend. He’s predicted <b>${f1(base)}</b> pts over GW${gl[0]}–${gl[gl.length - 1]}.${+S.ft < 1 ? ' You have no free transfers, so this costs 4 pts.' : ''}`;
+  const card = (p, t, mine) => `<div class="pc${mine ? ' mine' : ''}"><div class="top"><div class="who"><button class="namebtn" data-pid="${p.id}">${esc(p.name)}</button><br><span>${esc(T(p.team))} · £${p.cost.toFixed(1)}m${p.status !== 'a' ? ` · <span class="neg">${p.chance ?? 0}% fit</span>` : ''}${mine ? ' · your player' : ''}</span></div><div class="tot"><b>${f1(t)}</b><span class="${mine ? 'mut' : t - base >= 0 ? 'pos' : 'neg'}">${mine ? `${gl.length} GWs` : sgn(t - base) + ' vs him'}</span></div>${mine ? '' : `<button class="btn sm ghost" data-swap="${p.id}" aria-label="Swap in ${esc(p.name)}">Swap</button>`}</div><div class="gwrow">${gl.map(g => `<div class="gwc" style="${heat(p.ep[g] || 0)}"><b>${f1(p.ep[g] || 0)}</b>${esc(fxShort(p, g))}</div>`).join('')}</div></div>`;
+  $('replist').innerHTML = card(out, base, true) + (rows.map(r => card(r.p, r.t, false)).join('') || '<p class="mut empty">No affordable players match.</p>');
+  $('replist').querySelectorAll('[data-pid]').forEach(b => b.onclick = () => openPlayer(+b.dataset.pid));
+  $('replist').querySelectorAll('[data-swap]').forEach(b => b.onclick = () => { const inn = M.byId[+b.dataset.swap]; S.squad = S.squad.map(id => id === out.id ? inn.id : id); S.bank = Math.round((budget - inn.cost) * 10) / 10; S.ft = Math.max(0, S.ft - 1); S.sample = false; repOut = inn.id; save(); R = null; plan(); renderRep(); });
+}
+
+// ---------- Fixtures ----------
+function renderTicker() {
+  const gl = M.horizonGWs.slice(0, 8), six = gl.slice(0, 6);
+  const v = (t, g) => { const a = M.ticker[t][g] || []; return a.length ? a.reduce((s, x) => s + x[tMode], 0) / (tMode === 'la' ? a.length : 1) : null; };
+  const score = t => six.reduce((s, g) => { const x = v(t, g); return s + (x == null ? (tMode === 'la' ? 2.5 : 0) : x); }, 0);
+  const teams = M.teams.map(t => t.id).sort((a, b) => tMode === 'la' ? score(a) - score(b) : score(b) - score(a));
+  const col = x => { if (x == null) return 'background:#888;color:#fff'; const t = Math.max(0, Math.min(1, tMode === 'la' ? (2.2 - x) / 1.6 : (x - .7) / 1.6)); return `background:${t >= .5 ? `rgba(29,138,79,${(t - .5) * 1.6})` : `rgba(196,59,44,${(.5 - t) * 1.6})`};${Math.abs(t - .5) > .3 ? 'color:#fff' : ''}`; };
+  $('tt').innerHTML = `<thead><tr><th>Club</th>${gl.map(g => `<th style="text-align:center">GW${g}</th>`).join('')}</tr></thead><tbody>` + teams.map(t => `<tr><td>${esc(T(t))}</td>${gl.map(g => { const a = M.ticker[t][g] || [], x = v(t, g); return `<td class="heat" style="${col(x)}">${a.length ? a.map(z => esc(T(z.opp)) + (z.home ? '' : '*')).join('+') + '<br>' + f1(x) : 'Blank'}</td>`; }).join('')}</tr>`).join('') + '</tbody>';
+}
+
+// ---------- Player sheet ----------
+function openPlayer(id) {
+  const p = M.byId[id], g = M.nextGW, d = p.detail[g] || [], gl = M.horizonGWs.slice(0, 5);
+  const lbl = { app: 'Playing time', g: 'Goals', a: 'Assists', cs: 'Clean sheet', gc: 'Goals conceded', sv: 'Saves', dc: 'Defensive contribution', bonus: 'Bonus', yc: 'Cards' }, sum = k => d.reduce((s, x) => s + x[k], 0);
+  $('pdlgc').innerHTML = `<div class="sheethead"><h2>${esc(p.name)}</h2><button class="xbtn" data-close aria-label="Close">×</button></div>
+  <div class="mut">${esc(p.posName)} · ${esc(M.teamById[p.team].name)} · £${p.cost.toFixed(1)}m · ${p.pts} pts this season · ${p.sel}% owned</div>
+  ${p.news ? `<p class="note">${esc(p.news)}</p>` : ''}
+  <div class="gwrow" style="margin:14px 0">${gl.map(x => `<div class="gwc" style="${heat(p.ep[x] || 0)}">GW${x}<b>${f1(p.ep[x] || 0)}</b>${esc(fxShort(p, x))}</div>`).join('')}</div>
+  <h3>GW${g} breakdown · ${esc(fxLong(p, g))}</h3>
+  <table style="margin-top:6px"><tbody>${Object.keys(lbl).filter(k => Math.abs(sum(k)) > .005).map(k => `<tr><td>${lbl[k]}</td><td class="r">${sum(k) < 0 ? '−' : ''}${Math.abs(sum(k)).toFixed(2)}</td></tr>`).join('')}<tr><td><b>Total</b></td><td class="r"><b>${f1(p.ep[g] || 0)}</b></td></tr></tbody></table>
+  <p class="small mut">Expected ${Math.round(p.baseMin)} minutes when fit · xG ${(+p.xg).toFixed(1)}, xA ${(+p.xa).toFixed(1)} this season.</p>
+  <label class="f" for="ovr">Know better? Set his expected minutes (blank = automatic)</label>
+  <div style="display:flex;gap:8px"><input id="ovr" type="number" min="0" max="90" inputmode="numeric" value="${S.over[id] ?? ''}"><button class="btn sm pri" id="ovrs">Save</button></div>`;
+  $('ovrs').onclick = () => { const v = $('ovr').value; if (v === '') delete S.over[id]; else S.over[id] = Math.max(0, Math.min(90, +v)); save(); $('pdlg').close(); build(); replan(); };
+  $('pdlg').showModal();
+}
+
+// ---------- Setup & settings ----------
+function renderSetup() {
+  $('setup-native').hidden = !NATIVE; $('setup-web').hidden = NATIVE;
+  $('apkhint').innerHTML = `On Android? <a href="${APK_URL}">Get the app</a> to load your team from your FPL ID with live data.`;
+  $('tid').value = S.teamId || '';
+}
+const norm = x => x.replace(/ß/g, 'ss').replace(/[øØ]/g, 'o').replace(/[æÆ]/g, 'ae').replace(/[łŁ]/g, 'l').replace(/[đĐ]/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+function canAdd(p, list = S.squad) {
+  const sq = list.map(id => M.byId[id]), lim = { 1: 2, 2: 5, 3: 5, 4: 3 };
+  if (list.includes(p.id)) return 'Already in squad';
+  if (sq.filter(x => x.pos === p.pos).length >= lim[p.pos]) return `Already ${lim[p.pos]} ${p.posName}s`;
+  if (sq.filter(x => x.team === p.team).length >= 3) return 'Already 3 from this club';
+  return '';
+}
+function parseNames(text) {
+  const codes = new Set(M.teams.map(t => t.short)), out = [], miss = [], guess = [];
+  text.split(/[\n,;]+/).map(x => x.trim()).filter(Boolean).forEach(tok => {
+    const parts = tok.split(/\s+/); let club = null;
+    if (parts.length > 1 && codes.has(parts[parts.length - 1].toUpperCase())) club = parts.pop().toUpperCase();
+    const n = norm(parts.join(' ')), pool = M.players.filter(p => !club || T(p.team) === club);
+    let c = pool.filter(p => norm(p.name) === n); if (!c.length) c = pool.filter(p => norm(p.name).includes(n) || (n.includes(norm(p.name)) && norm(p.name).length > 3));
+    c = c.filter(p => !canAdd(p, out)).sort((a, b) => b.min - a.min);
+    if (!c.length) { miss.push(tok); return; } if (c.length > 1) guess.push(`${tok} → ${c[0].name} (${T(c[0].team)})`); out.push(c[0].id);
+  });
+  return { ids: out, miss, guess };
+}
+function renderSettings() {
+  $('set-team').innerHTML = NATIVE ? `<label class="f" for="stid">FPL team ID</label><div style="display:flex;gap:8px"><input id="stid" inputmode="numeric" value="${esc(S.teamId || '')}" placeholder="e.g. 1234567"><button class="btn sm pri" id="sreload">${S.teamId ? 'Reload' : 'Load'}</button></div><div class="msg" id="smsg">${S.team ? `${esc(S.team.name)} · ${esc(S.team.manager)}${S.team.rank ? ' · rank ' + Number(S.team.rank).toLocaleString() : ''}` : ''}</div>` : '';
+  if ($('sreload')) $('sreload').onclick = async () => { const id = $('stid').value.replace(/\D/g, ''); if (!id) return; $('settings').close(); if (await importTeam(id)) replan(); else { route(); $('settings').showModal(); renderSettings(); $('smsg').className = 'msg err'; $('smsg').textContent = 'Couldn’t load that team. Check the ID.'; } };
+  $('bank').value = S.bank; $('ft').value = S.ft; $('cwc').checked = S.wc; $('cfh').checked = S.fh; $('hz').value = S.hz;
+  $('ftnote').textContent = S.ftEst != null ? `Worked out from your transfer history as ${S.ftEst}. FPL doesn’t publish it, so check it against the app.` : '';
+  $('sqchips').innerHTML = S.squad.map(id => M.byId[id]).sort((a, b) => a.pos - b.pos).map(p => `<span class="sqc">${esc(p.name)} <span class="mut">${esc(T(p.team))}</span><button data-rm="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></span>`).join('') || '<span class="mut small">No players yet.</span>';
+  $('sqchips').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { S.squad = S.squad.filter(x => x !== +b.dataset.rm); S.sample = false; save(); R = null; renderSettings(); });
+  const st = M.meta;
+  $('datastatus').textContent = st.live ? `Live from FPL, updated ${new Date(st.snapshot).toLocaleString()}. Stats up to GW${st.statsThroughGW}.` : `Built-in snapshot from ${st.snapshot}, stats up to GW${st.statsThroughGW}. ${NATIVE ? '' : 'The Android app loads live data.'}`;
+  $('datactl').innerHTML = NATIVE ? '<button class="btn sm ghost" id="refresh">Refresh data now</button>' : `<p class="small"><a href="${APK_URL}">Download the Android app</a> for live data and loading your team by ID.</p>`;
+  if ($('refresh')) $('refresh').onclick = async () => { $('settings').close(); await refreshLive(true); build(); busy(''); replan(); };
+}
+
+// ---------- events ----------
+$('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; view = b.dataset.v; window.scrollTo(0, 0); route(); });
+$('opensettings').onclick = () => { renderSettings(); $('settings').showModal(); };
+document.addEventListener('click', e => { if (e.target.closest('[data-close]')) e.target.closest('dialog').close(); });
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+$('settings').addEventListener('close', () => { if (!R) replan(); });
+[['bank', v => Math.max(0, +v || 0)], ['ft', v => +v], ['hz', v => +v]].forEach(([k, fn]) => $(k).addEventListener('change', () => { S[k] = fn($(k).value); save(); R = null; }));
+$('cwc').onchange = () => { S.wc = $('cwc').checked; save(); R = null; };
+$('cfh').onchange = () => { S.fh = $('cfh').checked; save(); R = null; };
+$('loadteam').onclick = async () => { const id = $('tid').value.replace(/\D/g, ''); if (!id) { $('tidmsg').className = 'msg err'; $('tidmsg').textContent = 'Enter the number from your FPL Points page.'; return; } if (await importTeam(id)) { view = 'week'; replan(); } };
+$('bulkgo').onclick = () => {
+  const r = parseNames($('bulk').value);
+  if (r.ids.length === 15) { S.squad = r.ids; S.sample = false; S.team = null; save(); view = 'week'; replan(); return; }
+  $('bulkmsg').className = 'msg err'; $('bulkmsg').textContent = `Matched ${r.ids.length} of 15.` + (r.miss.length ? ` Couldn’t place: ${r.miss.join(', ')}.` : '') + (r.guess.length ? ` Guessed: ${r.guess.join('; ')}.` : '') + ' A squad needs 2 GK, 5 DEF, 5 MID, 3 FWD and at most 3 per club.';
+};
+$('trysample').onclick = () => {
+  const pick = (pos, n, maxc) => M.players.filter(p => p.pos === pos && p.cost <= maxc && p.min > 300 && p.status === 'a').sort((a, b) => b.pts - a.pts).slice(0, n);
+  const ids = []; [[1, 2, 5], [2, 5, 5.5], [3, 5, 8], [4, 3, 9]].forEach(([pos, n, mx]) => pick(pos, 20, mx).forEach(p => { if (ids.filter(i => M.byId[i].pos === pos).length < n && !canAdd(p, ids)) ids.push(p.id); }));
+  S.squad = ids; S.bank = 0.5; S.ft = 1; S.wc = S.fh = true; S.sample = true; S.team = null; save(); view = 'week'; replan();
+};
+$('pastesquad').onclick = () => { $('settings').close(); S.squad = []; save(); R = null; route(); };
+$('clearsquad').onclick = () => { S.squad = []; S.team = null; save(); R = null; $('settings').close(); route(); };
+$('search').addEventListener('input', () => {
+  const q = norm($('search').value), box = $('sugg'); if (q.length < 2) { box.hidden = true; return; }
+  const res = M.players.filter(p => norm(p.name).includes(q)).sort((a, b) => b.pts - a.pts).slice(0, 10); box.hidden = !res.length;
+  box.innerHTML = res.map(p => { const w = canAdd(p); return `<button data-add="${p.id}" ${w ? 'disabled style="opacity:.5"' : ''}><b>${esc(p.name)}</b> <span class="mut small">${esc(p.posName)} · ${esc(T(p.team))} · £${p.cost.toFixed(1)}${w ? ' · ' + esc(w) : ''}</span></button>`; }).join('');
+  box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { S.squad.push(+b.dataset.add); S.sample = false; save(); R = null; $('search').value = ''; box.hidden = true; renderSettings(); });
+});
+$('repout').onchange = () => { repOut = +$('repout').value; renderRep(); };
+$('repsort').onchange = renderRep; $('repq').oninput = renderRep;
+$('tmode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tMode = b.dataset.m; $('tmode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderTicker(); });
+document.addEventListener('visibilitychange', async () => { if (NATIVE && document.visibilityState === 'visible' && live && Date.now() - Date.parse(live.meta.snapshot) > 3 * 3600e3) { await refreshLive(false); build(); busy(''); replan(); } });
+boot();
+}
+</script>
+</body></html>

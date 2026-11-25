@@ -1,0 +1,56 @@
+name: Build Android app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx cap sync android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Load signing key
+        env:
+          KS: ${{ secrets.FPL_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/fpldesk.jks"
+            echo "FPL_KEYSTORE=$RUNNER_TEMP/fpldesk.jks" >> "$GITHUB_ENV"
+          else
+            echo "No signing key secret; building with the debug key."
+          fi
+      - name: Build APK
+        env:
+          FPL_KEYSTORE_PASS: ${{ secrets.FPL_KEYSTORE_PASS }}
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          cp app/build/outputs/apk/release/app-release.apk ../FPL-Desk.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FPL-Desk-apk
+          path: FPL-Desk.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.${{ github.run_number }}
+          name: FPL Desk 1.${{ github.run_number }}
+          make_latest: true
+          files: FPL-Desk.apk
+          body: |
+            Download **FPL-Desk.apk** below and open it on your Android phone.
+            The first time, Android asks you to allow installs from your browser or Files app. Allow it, then tap Install.
