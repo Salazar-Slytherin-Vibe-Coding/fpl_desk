@@ -13,14 +13,20 @@
   function slim(b, fx, lives, evIds) {
     const teamGW = {};
     fx.forEach(f => { if (!f.event) return; (teamGW[f.team_h] ||= new Set()).add(f.event); (teamGW[f.team_a] ||= new Set()).add(f.event); });
-    const mins = evIds.map((_, i) => { const m = {}; (lives[i].elements || []).forEach(e => m[e.id] = e.stats ? e.stats.minutes : 0); return m; });
-    const recent = {};
-    b.elements.forEach(e => { recent[e.id] = evIds.map((g, i) => teamGW[e.team] && teamGW[e.team].has(g) ? (mins[i][e.id] ?? 0) : null); });
+    const st = evIds.map((_, i) => { const m = {}; (lives[i].elements || []).forEach(e => m[e.id] = e.stats || {}); return m; });
+    const recent = {}, recentXG = {}, recentXA = {}, recentPts = {};
+    const col = (e, f) => evIds.map((g, i) => teamGW[e.team] && teamGW[e.team].has(g) ? f(st[i][e.id] || {}) : null);
+    b.elements.forEach(e => {
+      recent[e.id] = col(e, s => s.minutes || 0);
+      recentXG[e.id] = col(e, s => +(s.expected_goals || 0));
+      recentXA[e.id] = col(e, s => +(s.expected_assists || 0));
+      recentPts[e.id] = col(e, s => s.total_points || 0);
+    });
     const done = b.events.filter(e => e.finished).map(e => e.id);
     return {
       bootstrap: { teams: b.teams.map(t => ({ id: t.id, name: t.name, short_name: t.short_name })), events: b.events.map(e => ({ id: e.id, finished: e.finished, is_current: e.is_current, is_next: e.is_next, deadline_time: e.deadline_time })), elements: b.elements.map(e => { const o = {}; KEEP.forEach(k => o[k] = e[k]); return o; }) },
       fixtures: fx.map(f => ({ id: f.id, event: f.event, kickoff_time: f.kickoff_time, team_h: f.team_h, team_a: f.team_a, finished: f.finished, team_h_score: f.team_h_score, team_a_score: f.team_a_score })),
-      recent,
+      recent, recentXG, recentXA, recentPts,
       meta: { source: 'Live from FPL', snapshot: new Date().toISOString(), statsThroughGW: done.length ? Math.max(...done) : null, live: true }
     };
   }
