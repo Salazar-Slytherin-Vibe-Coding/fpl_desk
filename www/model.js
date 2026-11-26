@@ -44,7 +44,8 @@
     } else {
       fixtures = snap.fixtures.map(([id, ev, ko, h, a, fin, hs, as]) => ({ id, ev, ko, h, a, fin, hs, as }));
     }
-    return { players, fixtures, teams, meta };
+    const hist = (fresh && fresh.hist) || (fresh && fresh.bootstrap ? null : snap.hist) || null;
+    return { players, fixtures, teams, meta, hist };
   }
 
   function build(snap, opt = {}) {

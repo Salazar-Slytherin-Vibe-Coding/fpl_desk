@@ -15,7 +15,13 @@
     fx.forEach(f => { if (!f.event) return; (teamGW[f.team_h] ||= new Set()).add(f.event); (teamGW[f.team_a] ||= new Set()).add(f.event); });
     const st = evIds.map((_, i) => { const m = {}; (lives[i].elements || []).forEach(e => m[e.id] = e.stats || {}); return m; });
     const recent = {}, recentXG = {}, recentXA = {}, recentPts = {};
-    const col = (e, f) => evIds.map((g, i) => teamGW[e.team] && teamGW[e.team].has(g) ? f(st[i][e.id] || {}) : null);
+    const last6 = evIds.length - Math.min(6, evIds.length);
+    const col = (e, f) => evIds.slice(last6).map((g, j) => { const i = j + last6; return teamGW[e.team] && teamGW[e.team].has(g) ? f(st[i][e.id] || {}) : null; });
+    const hp = {};
+    b.elements.forEach(e => {
+      const row = evIds.map((g, i) => { if (!(teamGW[e.team] && teamGW[e.team].has(g))) return null; const x = st[i][e.id] || {}; return [x.minutes || 0, +(x.expected_goals || 0), +(x.expected_assists || 0), +(x.expected_goals_conceded || 0), x.goals_scored || 0, x.assists || 0, x.total_points || 0]; });
+      if (row.some(r => r && r[0] > 0)) hp[e.id] = row;
+    });
     b.elements.forEach(e => {
       recent[e.id] = col(e, s => s.minutes || 0);
       recentXG[e.id] = col(e, s => +(s.expected_goals || 0));
@@ -26,7 +32,7 @@
     return {
       bootstrap: { teams: b.teams.map(t => ({ id: t.id, name: t.name, short_name: t.short_name })), events: b.events.map(e => ({ id: e.id, finished: e.finished, is_current: e.is_current, is_next: e.is_next, deadline_time: e.deadline_time })), elements: b.elements.map(e => { const o = {}; KEEP.forEach(k => o[k] = e[k]); return o; }) },
       fixtures: fx.map(f => ({ id: f.id, event: f.event, kickoff_time: f.kickoff_time, team_h: f.team_h, team_a: f.team_a, finished: f.finished, team_h_score: f.team_h_score, team_a_score: f.team_a_score })),
-      recent, recentXG, recentXA, recentPts,
+      recent, recentXG, recentXA, recentPts, hist: { gws: evIds, p: hp },
       meta: { source: 'Live from FPL', snapshot: new Date().toISOString(), statsThroughGW: done.length ? Math.max(...done) : null, live: true }
     };
   }
@@ -35,8 +41,8 @@
     const b = await get('bootstrap-static/');
     step('Downloading fixtures');
     const fx = await get('fixtures/');
-    const evIds = b.events.filter(e => e.finished).map(e => e.id).slice(-6);
-    step('Checking recent minutes');
+    const evIds = b.events.filter(e => e.finished).map(e => e.id).slice(-10);
+    step('Checking the last 10 gameweeks');
     const lives = await Promise.all(evIds.map(id => get(`event/${id}/live/`)));
     return slim(b, fx, lives, evIds);
   }

@@ -138,6 +138,18 @@ details summary{cursor:pointer;font-weight:600;min-height:48px;display:flex;alig
 .scen .tot{text-align:right;white-space:nowrap}.scen .tot b{display:block;font:700 24px/1 "Barlow Condensed",Barlow,sans-serif}
 .rep{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:8px 0}.rep .grow{flex:1;min-width:0}.rep b{font-size:16px}
 .grow{flex:1;min-width:0}
+.stbl{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+.stbl th,.stbl td{padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.stbl th{font-size:12px;color:var(--mut);font-weight:600;cursor:pointer;position:sticky;top:0;background:var(--card);z-index:1}
+.stbl th.on{color:var(--ink)}.stbl th.on:after{content:" ▾"}
+.stbl td:first-child,.stbl th:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;width:128px;min-width:128px;max-width:128px;overflow:hidden;text-overflow:ellipsis;box-shadow:1px 0 0 var(--line)}
+.stbl th:first-child{z-index:3}
+.stbl td:first-child b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis}.stbl td:first-child span{font-size:12px;color:var(--mut)}
+.stbl tr.mine td{background:var(--soft)}.stbl tr.mine td:first-child{background:var(--soft)}
+.stbl td.hi{font-weight:700}
+.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px;margin:8px 0}
+.filters label.f{margin:0 0 2px;font-size:12px}.filters select,.filters input{min-height:44px;padding:6px 8px;font-size:15px}
+@media(min-width:700px){.filters{grid-template-columns:repeat(6,minmax(0,1fr))}}
 </style></head>
 <body>
 
@@ -223,6 +235,22 @@ details summary{cursor:pointer;font-weight:600;min-height:48px;display:flex;alig
     <div class="list" id="replist"></div>
   </section>
 
+  <section class="view" id="v-stats">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><h2>Stats</h2>
+    <div class="seg" id="stmode"><button data-m="p" class="on">Players</button><button data-m="c">Clubs</button></div></div>
+    <div class="filters">
+      <div><label class="f" for="stwin">Gameweeks</label><select id="stwin"><option value="3">Last 3</option><option value="5" selected>Last 5</option><option value="10">Last 10</option><option value="0">Season</option></select></div>
+      <div><label class="f" for="stsort">Sort by</label><select id="stsort"></select></div>
+      <div><label class="f" for="stunit">Show</label><select id="stunit"><option value="t">Totals</option><option value="90">Per 90</option></select></div>
+      <div class="pfil"><label class="f" for="stpos">Position</label><select id="stpos"><option value="0">All</option><option value="1">GK</option><option value="2">DEF</option><option value="3">MID</option><option value="4">FWD</option></select></div>
+      <div class="pfil"><label class="f" for="stmax">Max £m</label><input id="stmax" type="number" step="0.5" min="3.5" inputmode="decimal" placeholder="Any"></div>
+      <div class="pfil"><label class="f" for="stq">Search</label><input id="stq" placeholder="Name or club" autocomplete="off"></div>
+    </div>
+    <p class="small mut" id="stnote" style="margin:4px 0 10px"></p>
+    <div class="card scroll" style="padding:0;max-height:70vh;overflow:auto"><table class="stbl" id="stt"></table></div>
+    <div style="margin:10px 0"><button class="btn sm ghost" id="stmore" hidden>Show more</button></div>
+  </section>
+
   <section class="view" id="v-fixtures">
     <h2>Fixtures</h2>
     <div class="seg" id="tmode" style="margin:10px 0"><button data-m="la" class="on">For defenders</button><button data-m="lf">For attackers</button></div>
@@ -235,6 +263,7 @@ details summary{cursor:pointer;font-weight:600;min-height:48px;display:flex;alig
   <button data-v="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18" opacity=".6"/><circle cx="12" cy="12" r="3"/></svg>My team</button>
   <button data-v="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/></svg>Plans</button>
   <button data-v="players"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>Transfers</button>
+  <button data-v="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats</button>
   <button data-v="fixtures"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Fixtures</button>
 </nav>
 
@@ -351,7 +380,7 @@ function route() {
   $('v-' + view).classList.add('on');
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
   resim();
-  if (view === 'home') renderHome(); else if (view === 'plan') renderPlans(); else if (view === 'players') renderRep(); else renderTicker();
+  if (view === 'home') renderHome(); else if (view === 'plan') renderPlans(); else if (view === 'players') renderRep(); else if (view === 'stats') renderStats(); else renderTicker();
 }
 
 // ---------- My team (home) ----------
@@ -541,6 +570,85 @@ function renderRep() {
   $('replist').querySelectorAll('[data-pid]').forEach(b => b.onclick = () => { selGW = GL[0]; openPlayer(+b.dataset.pid); });
   $('replist').querySelectorAll('[data-swap]').forEach(b => b.onclick = () => { const w = pw(GL[0]); if (w.chip === 'fh' || w.chip === 'wc') { w.chip = null; delete w.chipSquad; } (w.transfers ||= []).push([out.id, +b.dataset.swap]); repOut = +b.dataset.swap; save(); selGW = GL[0]; view = 'home'; window.scrollTo(0, 0); route(); });
 }
+
+// ---------- Stats table ----------
+let stMode = 'p', stLimit = 50, stSortP = 'xgi', stSortC = 'xgd';
+const PCOLS = [['min', 'Mins'], ['g', 'G'], ['xg', 'xG'], ['a', 'A'], ['xa', 'xA'], ['xgi', 'xGI'], ['xgc', 'xGC'], ['pts', 'Pts'], ['next', 'Pred 5GW']];
+const CCOLS = [['gp', 'GP'], ['gf', 'GF'], ['xg', 'xG'], ['ga', 'GA'], ['xgc', 'xGC'], ['xgd', 'xG diff'], ['cs', 'CS']];
+const LOW_FIRST = new Set(['xgc', 'ga']);
+function statWindow() {
+  const n = +$('stwin').value, H = M.hist;
+  if (!n || !H) return null;
+  const k = Math.min(n, H.gws.length); return { n: k, idx: H.gws.map((g, i) => i).slice(-k), gws: H.gws.slice(-k) };
+}
+function playerStats(win) {
+  const H = M.hist, rows = [];
+  M.players.forEach(p => {
+    let r;
+    if (!win) r = { min: p.min, g: p.gs || 0, xg: +p.xg || 0, a: p.ast || 0, xa: +p.xa || 0, xgc: +p.xgc || 0, pts: p.pts || 0 };
+    else {
+      const h = H && H.p[p.id]; if (!h) return;
+      r = { min: 0, g: 0, xg: 0, a: 0, xa: 0, xgc: 0, pts: 0 };
+      win.idx.forEach(i => { const x = h[i]; if (!x) return; r.min += x[0]; r.xg += x[1]; r.xa += x[2]; r.xgc += x[3]; r.g += x[4]; r.a += x[5]; r.pts += x[6]; });
+    }
+    if (!r.min) return;
+    r.xgi = r.xg + r.xa; r.next = GL.reduce((s, g) => s + (p.ep[g] || 0), 0); r.p = p; rows.push(r);
+  });
+  return rows;
+}
+function clubStats(win) {
+  const H = M.hist, out = {};
+  M.teams.forEach(t => out[t.id] = { t, gp: 0, gf: 0, ga: 0, cs: 0, xg: 0, xgc: 0 });
+  const inWin = f => f.fin && f.ev && (!win || win.gws.includes(f.ev));
+  M.fixtures.forEach(f => { if (!inWin(f) || f.hs == null) return; const h = out[f.h], a = out[f.a]; h.gp++; a.gp++; h.gf += f.hs; h.ga += f.as; a.gf += f.as; a.ga += f.hs; if (f.as === 0) h.cs++; if (f.hs === 0) a.cs++; });
+  if (win && H) {
+    // team xG = sum of its players' xG; team xGC = the most any of its players was on the pitch for (a full-match player)
+    const byTeamGW = {};
+    M.players.forEach(p => { const h = H.p[p.id]; if (!h) return; win.idx.forEach(i => { const x = h[i]; if (!x) return; const k = p.team + ':' + i; const o = byTeamGW[k] ||= { xg: 0, xgc: 0 }; o.xg += x[1]; if (x[3] > o.xgc) o.xgc = x[3]; }); });
+    Object.entries(byTeamGW).forEach(([k, o]) => { const t = +k.split(':')[0]; out[t].xg += o.xg; out[t].xgc += o.xgc; });
+  } else {
+    const gkMin = {}, gkX = {};
+    M.players.forEach(p => { out[p.team].xg += +p.xg || 0; if (p.pos === 1) { gkMin[p.team] = (gkMin[p.team] || 0) + p.min; gkX[p.team] = (gkX[p.team] || 0) + (+p.xgc || 0); } });
+    Object.values(out).forEach(o => { o.xgc = gkMin[o.t.id] ? gkX[o.t.id] / (gkMin[o.t.id] / 90) * o.gp : 0; });
+  }
+  return Object.values(out).map(o => ({ ...o, xgd: o.xg - o.xgc }));
+}
+function renderStats() {
+  const win = statWindow(), per = $('stunit').value === '90', isP = stMode === 'p';
+  document.querySelectorAll('.pfil').forEach(e => e.hidden = !isP);
+  const allCols = isP ? PCOLS : CCOLS, sortK = isP ? stSortP : stSortC;
+  const cols = [...allCols.filter(c => c[0] === sortK), ...allCols.filter(c => c[0] !== sortK)];
+  $('stsort').innerHTML = allCols.map(([k, l]) => `<option value="${k}" ${k === sortK ? 'selected' : ''}>${l}</option>`).join('');
+  const label = win ? `GW${win.gws[0]}–${win.gws[win.gws.length - 1]}` : 'the season so far';
+  const own = new Set(S.squad);
+  const fmt = (k, v) => k === 'next' ? v.toFixed(1) : k === 'min' || k === 'gp' || k === 'cs' || ((k === 'g' || k === 'a' || k === 'pts' || k === 'gf' || k === 'ga') && !per) ? Math.round(v).toString() : v.toFixed(per ? 2 : 1);
+  if (isP) {
+    let rows = playerStats(win);
+    const pos = +$('stpos').value, mx = +$('stmax').value || 99, q = $('stq').value.trim().toLowerCase();
+    const minFloor = per ? (win ? 45 * win.n : 450) : 0;
+    rows = rows.filter(r => (!pos || r.p.pos === pos) && r.p.cost <= mx && r.min >= minFloor && (!q || r.p.name.toLowerCase().includes(q) || T(r.p.team).toLowerCase().includes(q) || M.teamById[r.p.team].name.toLowerCase().includes(q)));
+    const val = (r, k) => (per && k !== 'min' && k !== 'next') ? r[k] / r.min * 90 : r[k];
+    rows.sort((a, b) => LOW_FIRST.has(sortK) ? val(a, sortK) - val(b, sortK) : val(b, sortK) - val(a, sortK));
+    $('stnote').textContent = `${rows.length} players · ${label}${per ? ` · per 90, ${minFloor}+ mins` : ''} · xGC = expected goals conceded while on the pitch · Pred 5GW = predicted points GW${GL[0]}–${GL[GL.length - 1]}`;
+    $('stt').innerHTML = `<thead><tr><th data-k="">Player</th>${cols.map(([k, l]) => `<th data-k="${k}" class="${k === sortK ? 'on' : ''}">${l}</th>`).join('')}</tr></thead><tbody>` +
+      rows.slice(0, stLimit).map(r => `<tr class="${own.has(r.p.id) ? 'mine' : ''}" data-pid="${r.p.id}" style="cursor:pointer"><td><b>${esc(r.p.name)}</b><span>${esc(T(r.p.team))} · ${esc(r.p.posName)} · £${r.p.cost.toFixed(1)}</span></td>${cols.map(([k]) => `<td class="${k === sortK ? 'hi' : ''}">${fmt(k, val(r, k))}</td>`).join('')}</tr>`).join('') + '</tbody>';
+    $('stmore').hidden = rows.length <= stLimit;
+    $('stt').querySelectorAll('[data-pid]').forEach(tr => tr.onclick = () => { selGW = GL[0]; openPlayer(+tr.dataset.pid); });
+  } else {
+    const rows = clubStats(win), val = (r, k) => per && k !== 'gp' ? (r.gp ? r[k] / r.gp : 0) : r[k];
+    rows.sort((a, b) => LOW_FIRST.has(sortK) ? val(a, sortK) - val(b, sortK) : val(b, sortK) - val(a, sortK));
+    $('stnote').textContent = `${label}${per ? ' · per match' : ''} · GF/GA = actual goals · xG/xGC = expected goals for/against · positive xG diff = creates more than it allows`;
+    $('stt').innerHTML = `<thead><tr><th data-k="">Club</th>${cols.map(([k, l]) => `<th data-k="${k}" class="${k === sortK ? 'on' : ''}">${l}</th>`).join('')}</tr></thead><tbody>` +
+      rows.map(r => `<tr><td><b>${esc(r.t.name)}</b><span>${esc(r.t.short)}</span></td>${cols.map(([k]) => `<td class="${k === sortK ? 'hi' : ''}">${k === 'xgd' ? (val(r, k) >= 0 ? '+' : '') : ''}${fmt(k, val(r, k))}</td>`).join('')}</tr>`).join('') + '</tbody>';
+    $('stmore').hidden = true;
+  }
+  $('stt').querySelectorAll('th[data-k]').forEach(th => th.dataset.k && (th.onclick = () => { if (isP) stSortP = th.dataset.k; else stSortC = th.dataset.k; $('stt').parentElement.scrollLeft = 0; renderStats(); }));
+}
+$('stmode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; stMode = b.dataset.m; stLimit = 50; $('stt').parentElement.scrollLeft = 0; $('stt').parentElement.scrollTop = 0; $('stmode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderStats(); });
+$('stsort').onchange = () => { if (stMode === 'p') stSortP = $('stsort').value; else stSortC = $('stsort').value; $('stt').parentElement.scrollLeft = 0; renderStats(); };
+['stwin', 'stunit', 'stpos'].forEach(id => $(id).onchange = () => { stLimit = 50; renderStats(); });
+['stmax', 'stq'].forEach(id => $(id).oninput = () => { stLimit = 50; renderStats(); });
+$('stmore').onclick = () => { stLimit += 50; renderStats(); };
 
 // ---------- Fixtures ----------
 function renderTicker() {
